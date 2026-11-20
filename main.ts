@@ -18,5 +18,10 @@ if (!(buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47))
 const w = buf.readUInt32BE(16);
 const h = buf.readUInt32BE(20);
 if (w > 1024 || h > 1024) throw new Error(`entry.png is ${w}x${h}; the gate allows at most 1024x1024`);
+// A whole PNG runs through its end marker: the last 12 bytes are the IEND chunk
+// (a 4-byte length, the name, and its CRC).
+const tail = buf.subarray(buf.length - 12);
+if (tail.toString('latin1').slice(4, 8) !== 'IEND') throw new Error('entry.png has no IEND end marker; the gate wants a whole image');
 
 copyFileSync(src, out);
+console.log(`entry.png copied: ${w}x${h}, ${bytes} bytes`);
